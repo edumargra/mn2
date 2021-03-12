@@ -1,6 +1,6 @@
 /*
-* Programa corresponent a l'apartat a de la Practica 1 de MN2 a la UB.
-* Implementacio en C de l'algoritme iteratiu de Jacobi.
+* Programa corresponent b l'apartat a de la Practica 1 de MN2 a la UB.
+* Implementacio en C de l'algoritme iteratiu de Gauss-Seidel.
 * Autors: Eduard Martin i Albert Catalan
 */
 
@@ -27,7 +27,15 @@ int main() {
     delta = (double *)calloc(n+2,sizeof(double));
     if(delta==NULL){printf("Couldn't allocate memory");exit(1);}
 
-    error_estimat = 1; /* initialize error to an arbitrary bigger value than epsilon */
+    error_estimat = 1; /* initialize error to an arbitrary value bigger than epsilon */
+
+    // Ax=r
+    // A is a tridiagonal matrix, which makes Cholesky decomposition unnecessary.
+    // c are the elements of the upper diagonal, b of the main diagonal and a of the lower diagonal.
+    // The ith equation of the system will be Xi = (Ri-Ai*Xi-1-Ci*Xi+1)/Bi (caps where used for easier differentiation between elements and indices)
+    // Therefore, (parenthesees used as iteration number) 
+    // Jacobi: Xi(k+1)=(Ri-Ai*Xi-1(k)-Ci*Xi+1(k))/Bi
+    // Gauss-Seidel: Xi(k+1)=(Ri-Ai*Xi-1(k+1)-Ci*Xi+1(k))/Bi
 
     while (error_estimat > epsilon && num_iteracions < max_iter) {
         
