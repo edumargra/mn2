@@ -8,24 +8,62 @@
 #include <stdlib.h>
 #include <math.h>
 
+#define PI atan(1)*4
+
+double indep_term_i(double x_i, double h, int i, double alpha, double beta, int n);
+double diagonal_inf_i(double x_i, double h);
+double diagonal_sup_i(double x_i, double h);
+double diagonal_i(double x_i, double h);
+
+double abs_error(double delta_past, double delta);
+double norm_inf(double *x, double *y, int n);
+
+double p(double x);
+double q(double x);
+double r(double x);
+
+
 int main() {
     double a, b; /* corresponding to interval [a,b] */
     int n;  /* number of interior points inside [a,b] to work on */
     double alpha, beta; /* frontier conditions */
     double epsilon; /* error tolerance */
     int max_iter;   /* max iterations */ 
-    double *x, *y;  /* solution vectors corresponding to the k and k-1 iterations */
-    double *delta; /* error vector corresponding to the solution difference between the k-1 and k-2 iterations */
 
-    int num_iteracions; /* present iteration number */
+    double *x, *y;  /* solution vectors corresponding to the k+1 and k iterations */
+
+    double delta = 0; /* inifinty norm of the error corresponding to the difference between the k+1 and k solution iterations */
+    double delta_past = 0; /* inifinty norm of the error corresponding to the difference between the k+1 and k solution iterations */ 
+
+    int num_iteracions = 0; /* present iteration number */
     double error_estimat;   /* present approximation error of the solutions */
 
-    x = (double *)calloc(n+2,sizeof(double));
+    double *diagonal, *diagonal_inf, *diagonal_sup, *indep_term;
+
+    a = 0;
+    b= 2*PI;
+    n = 100;
+    alpha = 0;
+    beta = 0;
+    max_iter = 3000;
+    epsilon = 10^-10;
+
+    
+    /*TODO: revise that position 0 and n+1 is not needed to compute*/
+    x = (double *)calloc(n,sizeof(double));
     if(x==NULL){printf("Couldn't allocate memory");exit(1);}
-    y = (double *)calloc(n+2,sizeof(double));
+    y = (double *)calloc(n,sizeof(double));
     if(y==NULL){printf("Couldn't allocate memory");exit(1);}
-    delta = (double *)calloc(n+2,sizeof(double));
-    if(delta==NULL){printf("Couldn't allocate memory");exit(1);}
+
+    diagonal = (double *)calloc(n,sizeof(double));
+    if(diagonal==NULL){printf("Couldn't allocate memory");exit(1);}
+    diagonal_sup = (double *)calloc(n,sizeof(double));
+    if(diagonal_sup==NULL){printf("Couldn't allocate memory");exit(1);}
+    diagonal_inf = (double *)calloc(n,sizeof(double));
+    if(diagonal_inf==NULL){printf("Couldn't allocate memory");exit(1);}
+    indep_term = (double *)calloc(n,sizeof(double));
+    if(indep_term==NULL){printf("Couldn't allocate memory");exit(1);}
+    
 
     error_estimat = 1; /* initialize error to an arbitrary value bigger than epsilon */
 
@@ -34,38 +72,109 @@ int main() {
     // c are the elements of the upper diagonal, b of the main diagonal and a of the lower diagonal.
     // The ith equation of the system will be Xi = (Ri-Ai*Xi-1-Ci*Xi+1)/Bi (caps where used for easier differentiation between elements and indices)
     // Therefore, (parenthesees used as iteration number) 
-    // Jacobi: Xi(k+1)=(Ri-Ai*Xi-1(k)-Ci*Xi+1(k))/Bi
-    // Gauss-Seidel: Xi(k+1)=(Ri-Ai*Xi-1(k+1)-Ci*Xi+1(k))/Bi
+    // Jacobi: Xi(k+1)=(Ri-Ai*X_{i-1}(k)-Ci*Xi+1(k))/Bi
+    // Gauss-Seidel: Xi(k+1)=(Ri-Ai*Xi-1(k+1)-Ci*X_{i+1}(k))/Bi
+
+    double h;
+    double pt;
+    h = b-a/(n+1);
+    /* REMEMBER: the first and last value of the solution is already known
+    * we will only compute the soltuions vlaue for the interior points
+    * therefore, to simplify, the ith position of the vector X represents the (i+1)th solution
+    */
+    /*if necessary, we could compute the values inside the solution loop for memory saving*/
+    for(int i=0; i < n; ++i) {
+        pt = a+h*(i+1);
+        diagonal[i] = diagonal_i(pt, h);
+        diagonal_sup[i] = diagonal_sup_i(pt, h);
+        diagonal_inf[i] = diagonal_inf_i(pt, h);
+        indep_term[i] = indep_term_i(pt, h, i+1, alpha, beta, n);
+    }
+
 
     while (error_estimat > epsilon && num_iteracions < max_iter) {
         
-        
+        for(int i = 0; i < n; ++i) { /*u_o = beta, u_{n+1} = beta*/
+            if( i == 0) {
+                x[i] = (indep_term[i] - diagonal_sup[i] * y[i+1])/diagonal[i];
+            }else if( i == n-1) {
+                x[i] = (indep_term[i] - diagonal_inf[i] * y[i-1])/diagonal[i];
+            }
+            else{ 
+                x[i] = (indep_term[i] - diagonal_inf[i] * y[i-1] - diagonal_sup[i] * y[i+1])/diagonal[i];
+            }
+        }
         
         num_iteracions++;
-        error_estimat = abs_error(delta,new_delta);
+        delta = norm_inf(x,y, n);
+        printf("delta %e\n", delta);
+        error_estimat = abs_error(delta_past, delta);
+        delta_past = delta;
+        
+        /* Update  x_k with x_k-1*/
+        for(int i=0; i<n ; ++i){
+                y[i]=x[i];
+        }
+
+        printf("Interacio %d, amb error %e i delta %e\n", num_iteracions, error_estimat, delta_past);
     }
 
+    printf("%e, %e, %d, %e, %e, %d, %e, %d, %e\n",a , b, n, alpha, beta, max_iter, epsilon, num_iteracions, error_estimat);
+    printf("%e\n", alpha);
+    for(int i = 0; i < n ; ++i){
+        printf("%e\n", y[i]);        
+    }
+    printf("%e\n", beta);
+
+}
+double indep_term_i(double x_i, double h, int i, double alpha, double beta, int n) {
+    if (i == 1){
+        return pow(h,2)/2*(r(x_i) - 2*diagonal_inf_i(x_i, h)*alpha/pow(h,2)); 
+    }
+    if (i == n){
+        return pow(h,2)/2*(r(x_i) - 2*diagonal_sup_i(x_i, h)*beta/pow(h,2)); 
+    }
+    return pow(h,2)/2*(r(x_i));
+}
+
+double diagonal_inf_i(double x_i, double h) {
+    return -1/2*(1 + p(x_i)*h/2);
+}
+
+double diagonal_sup_i(double x_i, double h) {
+     return -1/2*(1 - p(x_i)*h/2);
+}
+
+double diagonal_i(double x_i, double h) {
+     return (1 + p(x_i)*pow(h,2)/2);
 }
 
 /* Calculates a non-rigourus boundary for the error between two solutions*/
-double abs_error(double *delta, double* new_delta) {
-
+double abs_error(double delta_past, double delta) {
+    return fabs(pow(delta,2)/(delta_past-delta));
 }
 
-void* vector_substraction(double *delta, double *x, double *y, int n) {
-    for(int i = 0; i < n; ++i) {
-        delta[i] = x[i] - y[i];
-    }
-} 
+double norm_inf(double *x, double *y, int n) {
+    double norm,d;
+	norm=0;
 
-double r(double x) {
+    for(int i=0; i<n; ++i){
+        d=x[i]-y[i]; 
+        if(fabs(d)>norm){  
+            norm=fabs(d);
+        }
+    }
+	return norm; 
+}
+
+double p(double x) {
     return x;
 }
 
 double q(double x) {
-    return math.exp(x)
+    return exp(x);
 }
 
 double r(double x) {
-    return x * math.sin(x)(2 + math.exp(x)) + math.cos(x)(x^2 - 2)
+    return x * sin(x)*(2 + exp(x)) + cos(x)*(pow(x,2) - 2);
 }
