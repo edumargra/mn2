@@ -33,12 +33,12 @@ int main() {
     double *x, *y;  /* solution vectors corresponding to the k+1 and k iterations */
 
     double delta = 0; /* inifinty norm of the error corresponding to the difference between the k+1 and k solution iterations */
-    double delta_past = 0; /* inifinty norm of the error corresponding to the difference between the k+1 and k solution iterations */ 
+    double delta_past = 0; /* inifinty norm of the error corresponding to the difference between the k and k-1 solution iterations */ 
 
     int num_iteracions = 0; /* present iteration number */
-    double error_estimat;   /* present approximation error of the solutions */
+    double error_estimat = 1;   /* present approximation error of the solutions iteration, initialized to an arbitrary value bigger than epsilon */
 
-    double *diagonal, *diagonal_inf, *diagonal_sup, *indep_term;
+    double *diagonal, *diagonal_inf, *diagonal_sup, *indep_term; /* corresponding to the supra,infra and diagonal of the A matrix and the independent term*/
 
     a = 0;
     b= 2*PI;
@@ -46,7 +46,7 @@ int main() {
     alpha = 0;
     beta = 0;
     max_iter = 3000;
-    epsilon = 10^-10;
+    epsilon = pow(10,-10);
 
     
     /*TODO: revise that position 0 and n+1 is not needed to compute*/
@@ -64,8 +64,6 @@ int main() {
     indep_term = (double *)calloc(n,sizeof(double));
     if(indep_term==NULL){printf("Couldn't allocate memory");exit(1);}
     
-
-    error_estimat = 1; /* initialize error to an arbitrary value bigger than epsilon */
 
     // Ax=r
     // A is a tridiagonal matrix, which makes Cholesky decomposition unnecessary.
@@ -94,20 +92,17 @@ int main() {
 
     while (error_estimat > epsilon && num_iteracions < max_iter) {
         
-        for(int i = 0; i < n; ++i) { /*u_o = beta, u_{n+1} = beta*/
-            if( i == 0) {
-                x[i] = (indep_term[i] - diagonal_sup[i] * y[i+1])/diagonal[i];
-            }else if( i == n-1) {
-                x[i] = (indep_term[i] - diagonal_inf[i] * y[i-1])/diagonal[i];
-            }
-            else{ 
-                x[i] = (indep_term[i] - diagonal_inf[i] * y[i-1] - diagonal_sup[i] * y[i+1])/diagonal[i];
-            }
+        /* Special case: the first matrix row only has the diagonal and supra-diagonal element non-zero */
+        x[0] = (indep_term[0] - diagonal_sup[0] * y[1])/diagonal[0];
+        /* General case*/
+        for(int i = 1; i < n-1; ++i) {
+            x[i] = (indep_term[i] - diagonal_inf[i] * y[i-1] - diagonal_sup[i] * y[i+1])/diagonal[i];
         }
+        /* Special case: the last matrix row only has the diagonal and the infra-diagonal element non-zero*/
+        x[n-1] = (indep_term[n-1] - diagonal_inf[n-1] * y[n-2])/diagonal[n-1];
         
         num_iteracions++;
         delta = norm_inf(x,y, n);
-        printf("delta %e\n", delta);
         error_estimat = abs_error(delta_past, delta);
         delta_past = delta;
         
@@ -125,6 +120,9 @@ int main() {
         printf("%e\n", y[i]);        
     }
     printf("%e\n", beta);
+
+    /* free reserved memory*/
+    free(x); free(y); free(diagonal_inf); free(diagonal); free(diagonal_sup); free(indep_term);
 
 }
 double indep_term_i(double x_i, double h, int i, double alpha, double beta, int n) {
@@ -149,9 +147,9 @@ double diagonal_i(double x_i, double h) {
      return (1 + p(x_i)*pow(h,2)/2);
 }
 
-/* Calculates a non-rigourus boundary for the error between two solutions*/
+/* Calculates a non-rigourus boundary for the error between two solutions iterations*/
 double abs_error(double delta_past, double delta) {
-    return fabs(pow(delta,2)/(delta_past-delta));
+    return pow(delta,2)/(delta_past-delta);
 }
 
 double norm_inf(double *x, double *y, int n) {
