@@ -31,14 +31,13 @@ int main() {
     int max_iter;   /* max iterations */ 
 
     double *x, *y;  /* solution vectors corresponding to the k+1 and k iterations */
+    double *diagonal, *diagonal_inf, *diagonal_sup, *indep_term; /* corresponding to the supra,infra and diagonal of the A matrix and the independent term */
 
     double delta = 0; /* inifinty norm of the error corresponding to the difference between the k+1 and k solution iterations */
     double delta_past = 0; /* inifinty norm of the error corresponding to the difference between the k and k-1 solution iterations */ 
 
     int num_iteracions = 0; /* present iteration number */
     double error_estimat = 1;   /* present approximation error of the solutions iteration, initialized to an arbitrary value bigger than epsilon */
-
-    double *diagonal, *diagonal_inf, *diagonal_sup, *indep_term; /* corresponding to the supra,infra and diagonal of the A matrix and the independent term*/
 
     a = 0;
     b= 2*PI;
@@ -49,7 +48,6 @@ int main() {
     epsilon = pow(10,-10);
 
     
-    /*TODO: revise that position 0 and n+1 is not needed to compute*/
     x = (double *)calloc(n,sizeof(double));
     if(x==NULL){printf("Couldn't allocate memory");exit(1);}
     y = (double *)calloc(n,sizeof(double));
@@ -65,14 +63,14 @@ int main() {
     if(indep_term==NULL){printf("Couldn't allocate memory");exit(1);}
     
 
-    // Ax=r
-    // A is a tridiagonal matrix, which makes Cholesky decomposition unnecessary.
-    // c are the elements of the upper diagonal, b of the main diagonal and a of the lower diagonal.
-    // The ith equation of the system will be Xi = (Ri-Ai*Xi-1-Ci*Xi+1)/Bi (caps where used for easier differentiation between elements and indices)
-    // Therefore, (parenthesees used as iteration number) 
-    // Jacobi: Xi(k+1)=(Ri-Ai*X_{i-1}(k)-Ci*Xi+1(k))/Bi
-    // Gauss-Seidel: Xi(k+1)=(Ri-Ai*Xi-1(k+1)-Ci*X_{i+1}(k))/Bi
-
+    /* Ax=r
+    * A is a tridiagonal matrix, which makes Cholesky decomposition unnecessary.
+    * c are the elements of the upper diagonal, b of the main diagonal and a of the lower diagonal.
+    * The ith equation of the system will be Xi = (Ri-Ai*Xi-1-Ci*Xi+1)/Bi (caps where used for easier differentiation between elements and indices)
+    * Therefore, (parenthesees used as iteration number) 
+    * Jacobi: Xi(k+1)=(Ri-Ai*X_{i-1}(k)-Ci*Xi+1(k))/Bi
+    * Gauss-Seidel: Xi(k+1)=(Ri-Ai*Xi-1(k+1)-Ci*X_{i+1}(k))/Bi
+    */
     double h;
     double pt;
     h = b-a/(n+1);
@@ -87,9 +85,11 @@ int main() {
         diagonal_sup[i] = diagonal_sup_i(pt, h);
         diagonal_inf[i] = diagonal_inf_i(pt, h);
         indep_term[i] = indep_term_i(pt, h, i+1, alpha, beta, n);
+        printf("Iterations values %e %e %e %e\n", diagonal[i], diagonal_sup[i], diagonal_inf[i], indep_term[i]);
     }
-
-
+    printf("Impriimim valors %e %e %e\n", indep_term[0], diagonal_sup[0], diagonal[0]);
+    printf("Print h %e\n", h);
+    // EIII y[0] mai s'utilitza???
     while (error_estimat > epsilon && num_iteracions < max_iter) {
         
         /* Special case: the first matrix row only has the diagonal and supra-diagonal element non-zero */
@@ -101,25 +101,28 @@ int main() {
         /* Special case: the last matrix row only has the diagonal and the infra-diagonal element non-zero*/
         x[n-1] = (indep_term[n-1] - diagonal_inf[n-1] * y[n-2])/diagonal[n-1];
         
-        num_iteracions++;
-        delta = norm_inf(x,y, n);
-        error_estimat = abs_error(delta_past, delta);
-        delta_past = delta;
+        delta = norm_inf(x, y, n);
         
-        /* Update  x_k with x_k-1*/
+        if( num_iteracions > 0){
+            error_estimat = abs_error(delta_past, delta); //sempre es positiu, sino molt mala aproximacio estas fent
+        }
+        
+        if( num_iteracions < 10 ){
+            printf("Interacio %d, amb error %e, delta %e i primer, segon i ultim element %e %e %e\n", num_iteracions, error_estimat, delta, x[0], x[1], x[n-1]);
+        }
+        /* Prepare for next iteration*/
         for(int i=0; i<n ; ++i){
                 y[i]=x[i];
         }
-
-        printf("Interacio %d, amb error %e i delta %e\n", num_iteracions, error_estimat, delta_past);
+        num_iteracions++;
+        delta_past = delta;
     }
 
+    /* Final print-out following estipulated format*/
     printf("%e, %e, %d, %e, %e, %d, %e, %d, %e\n",a , b, n, alpha, beta, max_iter, epsilon, num_iteracions, error_estimat);
-    printf("%e\n", alpha);
     for(int i = 0; i < n ; ++i){
         printf("%e\n", y[i]);        
     }
-    printf("%e\n", beta);
 
     /* free reserved memory*/
     free(x); free(y); free(diagonal_inf); free(diagonal); free(diagonal_sup); free(indep_term);
@@ -132,19 +135,19 @@ double indep_term_i(double x_i, double h, int i, double alpha, double beta, int 
     if (i == n){
         return pow(h,2)/2*(r(x_i) - 2*diagonal_sup_i(x_i, h)*beta/pow(h,2)); 
     }
-    return pow(h,2)/2*(r(x_i));
+    return r(x_i)*pow(h,2)/2;
 }
 
 double diagonal_inf_i(double x_i, double h) {
-    return -1/2*(1 + p(x_i)*h/2);
+    return -1./2*(1 + p(x_i)*h/2.);
 }
 
 double diagonal_sup_i(double x_i, double h) {
-     return -1/2*(1 - p(x_i)*h/2);
+     return -1./2*(1 - p(x_i)*h/2.);
 }
 
 double diagonal_i(double x_i, double h) {
-     return (1 + p(x_i)*pow(h,2)/2);
+     return (1. + q(x_i)*pow(h,2)/2.);
 }
 
 /* Calculates a non-rigourus boundary for the error between two solutions iterations*/
