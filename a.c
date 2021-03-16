@@ -1,6 +1,6 @@
 /*
 * Programa corresponent b l'apartat a de la Practica 1 de MN2 a la UB.
-* Implementacio en C de l'algoritme iteratiu de Gauss-Seidel.
+* Implementacio en C de l'algoritme iteratiu de Jacobi.
 * Autors: Eduard Martin i Albert Catalan
 */
 
@@ -41,10 +41,10 @@ int main() {
 
     a = 0;
     b= 2*PI;
-    n = 100;
+    n = 1000;
     alpha = 0;
     beta = 0;
-    max_iter = 3000;
+    max_iter = 250000;
     epsilon = pow(10,-10);
 
     
