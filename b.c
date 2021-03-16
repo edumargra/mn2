@@ -69,7 +69,7 @@ int main() {
     * The ith equation of the system will be Xi = (Ri-Ai*Xi-1-Ci*Xi+1)/Bi (caps where used for easier differentiation between elements and indices)
     * Therefore, (parenthesees used as iteration number) 
     * Jacobi: Xi(k+1)=(Ri-Ai*X_{i-1}(k)-Ci*Xi+1(k))/Bi
-    * Gauss-Seidel: Xi(k+1)=(Ri-Ai*Xi-1(k+1)-Ci*X_{i+1}(k))/Bi
+    * Gauss-Seidel: Xi(k+1)=(Ri-Ai*X_{i-1}(k+1)-Ci*X_{i+1}(k))/Bi
     */
     double h;
     double pt;
@@ -94,10 +94,10 @@ int main() {
         x[0] = (indep_term[0] - diagonal_sup[0] * y[1])/diagonal[0];
         /* General case*/
         for(int i = 1; i < n-1; ++i) {
-            x[i] = (indep_term[i] - diagonal_inf[i] * y[i-1] - diagonal_sup[i] * y[i+1])/diagonal[i];
+            x[i] = (indep_term[i] - diagonal_inf[i] * x[i-1] - diagonal_sup[i] * y[i+1])/diagonal[i];
         }
         /* Special case: the last matrix row only has the diagonal and the infra-diagonal element non-zero*/
-        x[n-1] = (indep_term[n-1] - diagonal_inf[n-1] * y[n-2])/diagonal[n-1];
+        x[n-1] = (indep_term[n-1] - diagonal_inf[n-1] * x[n-2])/diagonal[n-1];
         
         delta = norm_inf(x, y, n);
         
