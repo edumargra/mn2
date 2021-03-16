@@ -1,6 +1,6 @@
 /*
 * Programa corresponent b l'apartat a de la Practica 1 de MN2 a la UB.
-* Implementacio en C de l'algoritme iteratiu de Jacobi.
+* Implementacio en C de l'algoritme iteratiu de Gauss-Seidel.
 * Autors: Eduard Martin i Albert Catalan
 */
 
@@ -30,6 +30,9 @@ int main() {
     double epsilon; /* error tolerance */
     int max_iter;   /* max iterations */ 
 
+    double w; /* relaxation factor */
+    double r; /* corresponding to the r defined on the SOR section of the class pdf*/
+
     double *x, *y;  /* solution vectors corresponding to the k+1 and k iterations */
     double *diagonal, *diagonal_inf, *diagonal_sup, *indep_term; /* corresponding to the supra,infra and diagonal of the A matrix and the independent term */
 
@@ -41,11 +44,12 @@ int main() {
 
     a = 0;
     b= 2*PI;
-    n = 1000;
+    n = 100;
     alpha = 0;
     beta = 0;
-    max_iter = 250000;
+    max_iter = 3000;
     epsilon = pow(10,-10);
+    w = 1;
 
     
     x = (double *)calloc(n,sizeof(double));
@@ -69,7 +73,7 @@ int main() {
     * The ith equation of the system will be Xi = (Ri-Ai*Xi-1-Ci*Xi+1)/Bi (caps where used for easier differentiation between elements and indices)
     * Therefore, (parenthesees used as iteration number) 
     * Jacobi: Xi(k+1)=(Ri-Ai*X_{i-1}(k)-Ci*Xi+1(k))/Bi
-    * Gauss-Seidel: Xi(k+1)=(Ri-Ai*Xi-1(k+1)-Ci*X_{i+1}(k))/Bi
+    * Gauss-Seidel: Xi(k+1)=(Ri-Ai*X_{i-1}(k+1)-Ci*X_{i+1}(k))/Bi
     */
     double h;
     double pt;
@@ -91,13 +95,16 @@ int main() {
     while (error_estimat > epsilon && num_iteracions < max_iter) {
         
         /* Special case: the first matrix row only has the diagonal and supra-diagonal element non-zero */
-        x[0] = (indep_term[0] - diagonal_sup[0] * y[1])/diagonal[0];
+        r = (indep_term[0] - diagonal_sup[0] * y[1]) / diagonal[0] - y[0]; // ATENTION: y[i] is multiplied and divided by the diagonal, not very smart
+        x[0] = y[0] + w * r;
         /* General case*/
         for(int i = 1; i < n-1; ++i) {
-            x[i] = (indep_term[i] - diagonal_inf[i] * y[i-1] - diagonal_sup[i] * y[i+1])/diagonal[i];
+            r = (indep_term[i] - diagonal_inf[i] * x[i-1] - diagonal_sup[i] * y[i+1]) / diagonal[i] - y[i];
+            x[i] = y[i] + w * r;
         }
         /* Special case: the last matrix row only has the diagonal and the infra-diagonal element non-zero*/
-        x[n-1] = (indep_term[n-1] - diagonal_inf[n-1] * y[n-2])/diagonal[n-1];
+        r = (indep_term[n-1] - diagonal_inf[n-1] * x[n-2]) / diagonal[n-1] - y[n-1];
+        x[n-1] = y[n-1] + w * r;
         
         delta = norm_inf(x, y, n);
         
