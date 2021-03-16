@@ -85,11 +85,9 @@ int main() {
         diagonal_sup[i] = diagonal_sup_i(pt, h);
         diagonal_inf[i] = diagonal_inf_i(pt, h);
         indep_term[i] = indep_term_i(pt, h, i+1, alpha, beta, n);
-        printf("Iterations values %e %e %e %e\n", diagonal[i], diagonal_sup[i], diagonal_inf[i], indep_term[i]);
+        //printf("Iterations values %e %e %e %e\n", diagonal[i], diagonal_sup[i], diagonal_inf[i], indep_term[i]);
     }
-    printf("Impriimim valors %e %e %e\n", indep_term[0], diagonal_sup[0], diagonal[0]);
-    printf("Print h %e\n", h);
-    // EIII y[0] mai s'utilitza???
+
     while (error_estimat > epsilon && num_iteracions < max_iter) {
         
         /* Special case: the first matrix row only has the diagonal and supra-diagonal element non-zero */
@@ -107,9 +105,12 @@ int main() {
             error_estimat = abs_error(delta_past, delta); //sempre es positiu, sino molt mala aproximacio estas fent
         }
         
+        /* Print for control 
         if( num_iteracions < 10 ){
             printf("Interacio %d, amb error %e, delta %e i primer, segon i ultim element %e %e %e\n", num_iteracions, error_estimat, delta, x[0], x[1], x[n-1]);
         }
+        */
+
         /* Prepare for next iteration*/
         for(int i=0; i<n ; ++i){
                 y[i]=x[i];
