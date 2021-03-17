@@ -22,14 +22,36 @@ double p(double x);
 double q(double x);
 double r(double x);
 
+void jacobi(double a, double b, int n, double alpha, double beta, int max_iter, double epsilon);
 
-int main() {
+
+int main(int argc, char *argv[]) {
+
+    if( argc != 8){
+        printf("Incorrect input. Introduce a, b, n, alpha, beta, max_iter and epsilon.\n");
+    }
+    /* We will now blindly believe that the user is well meaned*/
+
     double a, b; /* corresponding to interval [a,b] */
     int n;  /* number of interior points inside [a,b] to work on */
     double alpha, beta; /* frontier conditions */
     double epsilon; /* error tolerance */
-    int max_iter;   /* max iterations */ 
+    int max_iter;   /* max iterations */
 
+    a = argv[1];
+    b= argv[2];
+    n = argv[3];
+    alpha = argv[4];
+    beta = argv[5];
+    max_iter = argv[6];
+    epsilon = argv[7];
+
+    jacobi(a , b, n, alpha, beta, max_iter, epsilon);
+
+}
+
+/**/
+void jacobi(double a, double b, int n, double alpha, double beta, int max_iter, double epsilon ){
     double *x, *y;  /* solution vectors corresponding to the k+1 and k iterations */
     double *diagonal, *diagonal_inf, *diagonal_sup, *indep_term; /* corresponding to the supra,infra and diagonal of the A matrix and the independent term */
 
@@ -38,14 +60,6 @@ int main() {
 
     int num_iteracions = 0; /* present iteration number */
     double error_estimat = 1;   /* present approximation error of the solutions iteration, initialized to an arbitrary value bigger than epsilon */
-
-    a = 0;
-    b= 2*PI;
-    n = 100;
-    alpha = 0;
-    beta = 0;
-    max_iter = 250000;
-    epsilon = pow(10,-10);
 
     
     x = (double *)calloc(n,sizeof(double));
@@ -127,7 +141,6 @@ int main() {
 
     /* free reserved memory*/
     free(x); free(y); free(diagonal_inf); free(diagonal); free(diagonal_sup); free(indep_term);
-
 }
 double indep_term_i(double x_i, double h, int i, double alpha, double beta, int n) {
     if (i == 1){
