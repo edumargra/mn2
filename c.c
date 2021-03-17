@@ -77,7 +77,7 @@ int main() {
     */
     double h;
     double pt;
-    h = b-a/(n+1);
+    h = (b-a)/(n+1);
     /* REMEMBER: the first and last value of the solution is already known
     * we will only compute the soltuions vlaue for the interior points
     * therefore, to simplify, the ith position of the vector X represents the (i+1)th solution

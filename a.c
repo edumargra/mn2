@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define PI atan(1)*4
+#define PI 3.14159265358979323846
 
 double indep_term_i(double x_i, double h, int i, double alpha, double beta, int n);
 double diagonal_inf_i(double x_i, double h);
@@ -41,7 +41,7 @@ int main() {
 
     a = 0;
     b= 2*PI;
-    n = 1000;
+    n = 100;
     alpha = 0;
     beta = 0;
     max_iter = 250000;
@@ -73,7 +73,7 @@ int main() {
     */
     double h;
     double pt;
-    h = b-a/(n+1);
+    h = (b-a)/(n+1);
     /* REMEMBER: the first and last value of the solution is already known
     * we will only compute the soltuions vlaue for the interior points
     * therefore, to simplify, the ith position of the vector X represents the (i+1)th solution
@@ -85,7 +85,7 @@ int main() {
         diagonal_sup[i] = diagonal_sup_i(pt, h);
         diagonal_inf[i] = diagonal_inf_i(pt, h);
         indep_term[i] = indep_term_i(pt, h, i+1, alpha, beta, n);
-        //printf("Iterations values %e %e %e %e\n", diagonal[i], diagonal_sup[i], diagonal_inf[i], indep_term[i]);
+        printf("Iterations values %e %e %e %e\n", diagonal[i], diagonal_sup[i], diagonal_inf[i], indep_term[i]);
     }
 
     while (error_estimat > epsilon && num_iteracions < max_iter) {
@@ -148,7 +148,10 @@ double diagonal_sup_i(double x_i, double h) {
 }
 
 double diagonal_i(double x_i, double h) {
-     return (1. + q(x_i)*pow(h,2)/2.);
+    double tmp = pow(h, 2);
+    printf("h: %e\n", h);
+    printf("h^2: %e\n", tmp);
+    return 1. + q(x_i)*pow(h,2)/2.;
 }
 
 /* Calculates a non-rigourus boundary for the error between two solutions iterations*/
