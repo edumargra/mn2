@@ -22,14 +22,43 @@ double p(double x);
 double q(double x);
 double r(double x);
 
+void gauss(double a, double b, int n, double alpha, double beta, int max_iter, double epsilon);
 
-int main() {
-    double a, b; /* corresponding to interval [a,b] */
-    int n;  /* number of interior points inside [a,b] to work on */
-    double alpha, beta; /* frontier conditions */
-    double epsilon; /* error tolerance */
-    int max_iter;   /* max iterations */ 
+/* Reads the command line parameters and calls the Jacobi function */
+int main(int argc, char *argv[]) {
 
+    if( argc != 8){
+        printf("Incorrect input. Introduce a, b, n, alpha, beta, max_iter and epsilon.\n");
+    }
+
+    /* We will now blindly believe that the user is well meaned*/
+    double a, b; 
+    int n; 
+    double alpha, beta;
+    int max_iter;
+    double epsilon;
+
+    a = strtod(argv[1], NULL);
+    b= strtod(argv[2], NULL);
+    n = atoi(argv[3]);
+    alpha = strtod(argv[4], NULL);
+    beta = strtod(argv[5], NULL);
+    max_iter = atoi(argv[6]);
+    epsilon = strtod(argv[7], NULL);
+
+    gauss(a , b, n, alpha, beta, max_iter, epsilon);
+}
+
+/*
+* Computes the solution of the equation Ax = r, using
+* the iterative Gauss-Seidel method implemented element by element.
+* 'a' and 'b' corresponding to interval [a,b]
+* 'n' number of interior points inside [a,b] to work on
+* 'alpha' and 'beta' frontier conditions
+* 'max_iter' is the max iterations
+* 'epsilon' being the error tolerance
+*/
+void gauss(double a, double b, int n, double alpha, double beta, int max_iter, double epsilon ) {
     double *x, *y;  /* solution vectors corresponding to the k+1 and k iterations */
     double *diagonal, *diagonal_inf, *diagonal_sup, *indep_term; /* corresponding to the supra,infra and diagonal of the A matrix and the independent term */
 
@@ -38,15 +67,6 @@ int main() {
 
     int num_iteracions = 0; /* present iteration number */
     double error_estimat = 1;   /* present approximation error of the solutions iteration, initialized to an arbitrary value bigger than epsilon */
-
-    a = 0;
-    b= 2*PI;
-    n = 100;
-    alpha = 0;
-    beta = 0;
-    max_iter = 3000;
-    epsilon = pow(10,-10);
-
     
     x = (double *)calloc(n,sizeof(double));
     if(x==NULL){printf("Couldn't allocate memory");exit(1);}
@@ -68,16 +88,12 @@ int main() {
     * c are the elements of the upper diagonal, b of the main diagonal and a of the lower diagonal.
     * The ith equation of the system will be Xi = (Ri-Ai*Xi-1-Ci*Xi+1)/Bi (caps where used for easier differentiation between elements and indices)
     * Therefore, (parenthesees used as iteration number) 
-    * Jacobi: Xi(k+1)=(Ri-Ai*X_{i-1}(k)-Ci*Xi+1(k))/Bi
     * Gauss-Seidel: Xi(k+1)=(Ri-Ai*X_{i-1}(k+1)-Ci*X_{i+1}(k))/Bi
     */
     double h;
     double pt;
     h = (b-a)/(n+1);
-    /* REMEMBER: the first and last value of the solution is already known
-    * we will only compute the soltuions vlaue for the interior points
-    * therefore, to simplify, the ith position of the vector X represents the (i+1)th solution
-    */
+    
     /*if necessary, we could compute the values inside the solution loop for memory saving*/
     for(int i=0; i < n; ++i) {
         pt = a+h*(i+1);
@@ -100,16 +116,9 @@ int main() {
         x[n-1] = (indep_term[n-1] - diagonal_inf[n-1] * x[n-2])/diagonal[n-1];
         
         delta = norm_inf(x, y, n);
-        
         if( num_iteracions > 0){
             error_estimat = abs_error(delta_past, delta); //sempre es positiu, sino molt mala aproximacio estas fent
         }
-        
-        /* Print for control 
-        if( num_iteracions < 10 ){
-            printf("Interacio %d, amb error %e, delta %e i primer, segon i ultim element %e %e %e\n", num_iteracions, error_estimat, delta, x[0], x[1], x[n-1]);
-        }
-        */
 
         /* Prepare for next iteration*/
         for(int i=0; i<n ; ++i){
@@ -127,8 +136,9 @@ int main() {
 
     /* free reserved memory*/
     free(x); free(y); free(diagonal_inf); free(diagonal); free(diagonal_sup); free(indep_term);
-
 }
+
+/* Computes the independent term (B) following the pdf description*/
 double indep_term_i(double x_i, double h, int i, double alpha, double beta, int n) {
     if (i == 1){
         return pow(h,2)/2*(r(x_i) - 2*diagonal_inf_i(x_i, h)*alpha/pow(h,2)); 
@@ -139,23 +149,27 @@ double indep_term_i(double x_i, double h, int i, double alpha, double beta, int 
     return r(x_i)*pow(h,2)/2;
 }
 
+/* Computes the infra diagonal (a_i) following the pdf description*/
 double diagonal_inf_i(double x_i, double h) {
     return -1./2*(1 + p(x_i)*h/2.);
 }
 
+/* Computes the supra diagonal (c_i) following the pdf description*/
 double diagonal_sup_i(double x_i, double h) {
      return -1./2*(1 - p(x_i)*h/2.);
 }
 
+/* Computes the diagonal (b_i) following the pdf description*/
 double diagonal_i(double x_i, double h) {
      return (1. + q(x_i)*pow(h,2)/2.);
 }
 
-/* Calculates a non-rigourus boundary for the error between two solutions iterations*/
+/* Computes a non-rigourus boundary for the error between two solutions iterations*/
 double abs_error(double delta_past, double delta) {
     return pow(delta,2)/(delta_past-delta);
 }
 
+/* Computes the infinity norm of the substraction of two vectors (with the same dimension)*/
 double norm_inf(double *x, double *y, int n) {
     double norm,d;
 	norm=0;
@@ -169,14 +183,17 @@ double norm_inf(double *x, double *y, int n) {
 	return norm; 
 }
 
+/* Computes the p function following the pdf description*/
 double p(double x) {
     return x;
 }
 
+/* Computes the q function following the pdf description*/
 double q(double x) {
     return exp(x);
 }
 
+/* Computes the r function following the pdf description*/
 double r(double x) {
     return x * sin(x)*(2 + exp(x)) + cos(x)*(pow(x,2) - 2);
 }
