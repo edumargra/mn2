@@ -6,12 +6,12 @@
 
 **d)** 
 **Observació:** En els següents exercicis parlarem de convergència o divergència. En aquesta observació aclarirem el criteri que hem utilitzat en tota la pràctica.
-                En dividirem tres casos diferents:
+En dividirem tres casos diferents:
 
-                  * La cota de l'error absolut és menor que la tolerància amb menys iteracions de les màximes. -> Direm que convergeix.
-                  * La cota de l'error absolut no és menor que la tolerància després d'arribar a la iteració màxima. -> Direm que no convergeix.
-                  * La cota de l'error absolut és negativa. -> Direm que no convergeix.
-                    * Si la cota és negativa vol dir que l'error de la iteració actual és més gran que la anterior, és a dir, que aquesta iteració empitjora l'aproximació.
+* La cota de l'error absolut és menor que la tolerància amb menys iteracions de les màximes. -> Direm que convergeix.
+* La cota de l'error absolut no és menor que la tolerància després d'arribar a la iteració màxima. -> Direm que no convergeix.
+* La cota de l'error absolut és negativa. -> Direm que no convergeix.
+  * Si la cota és negativa vol dir que l'error de la iteració actual és més gran que la anterior, és a dir, que aquesta iteració empitjora l'aproximació.
 
 **Jacobi:** Convergeix en 2504 iteracions.
 
