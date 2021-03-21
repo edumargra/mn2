@@ -55,7 +55,7 @@ Al parlar de convergència dividirem els tres mateixo casos que en l'apartat ant
 | 0.3  | No convergeix ja que amb les 300.000 iteracions no aconsegueix una cota de l'error absolut inferior a la demanada. Tot i així, Arriba a una cota millor que per ω=0.2 | 300.000        |
 | 1    | No, la cota de l'error absolut és negativa.                  | 101.183        |
 | 1.8  | Si.                                                          | 13.370         |
-| 1.9  |                                                              | 6372           |
+| 1.9  | Si.                                                          | 6372           |
 | 5    | No                                                           | 2              |
 
 **Observació:** Els casos d'ω en que el mètode SOR divergeix i hem posat que ho fa en 2 iteracions, és degut a que en la primera no calculem la fita de l'error absolut doncs encara no tenim la de la iteració anterior!
