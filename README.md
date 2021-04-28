@@ -23,6 +23,7 @@ If you have installed the cmake utility, alternatively you can compile the progr
 - ```mkdir executables ; cd executables``` - create a specific directory for your executables and navigate to it
 - ```cmake ../``` -create auxilary files
 - ```cmake --build .``` -compile
+
 Keep in mind when executing, that in this case the executables names won't have the '.exe' termination.
 
 ## (h)
