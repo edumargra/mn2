@@ -6,7 +6,7 @@
 `gcc -Wall -ansi -std=c99 -c -pedantic program.c` 
 - **To link:**
 `gcc program.o -o program.exe -lm`
-- **To execute:**
+- **To execute with an output file:**
     - For (d):
     `./program.exe 0 6.283185307179586 100 0 0 3000 1e-10 > program100.out`
     - For (e);
@@ -19,15 +19,9 @@ where program is the name of the file and 'w' the chosen omega value.
 
 ### alternative:
 
-If you have installed the cmake utility, alternatively you can compile the programs with:
+If you have installed the cmake utility, you can compile the programs with:
 - ```mkdir executables ; cd executables``` - create a specific directory for your executables and navigate to it
 - ```cmake ../``` -create auxilary files
 - ```cmake --build .``` -compile
 
-Keep in mind when executing, that in this case the executables names won't have the '.exe' termination.
-
-## (h)
-
-Si p(x) = 0, llavors $A = {a_{ij}}$ es simetrica amb tots els elements de la diagonal inferior i superior igual a $-1/2$. Per tant, A es **diagonal dominant per files en sentit estricte** ja que $a_{ii} = 1 + e^x$ amb $x \in {0,2PI}$, per tant, $a_{ii} > 1$, per tant, $\sum_{i,j=1}_{j\neqi}|aij| \seq 1/2 + 1/2 = 1 < a_{ii}$.
-
-Amb la qual cosa, per la proposicio 1.2.2 i 1.2.3, el metode de Jacobi i el de Gauss-Seidel, respectivament, convergeixen.
+Then you can execute as explained above.
